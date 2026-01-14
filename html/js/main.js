@@ -1,65 +1,101 @@
-// 6. Arreglo de objetos con las preguntas
-const questions = [
+const quizData = [
     {
-        question: "¿Cuál es el lenguaje de programación estándar para la web?",
-        options: ["Java", "Python", "JavaScript", "C++"],
+      question: "¿En qué año ocurrió el descubrimiento de América?",
+        options: ["1492", "1485", "1502", "1453"],
+        correct: 0
+    },
+    {
+        question: "¿Quién fue el primer presidente de los Estados Unidos?",
+        options: ["Abraham Lincoln", "Thomas Jefferson", "George Washington", "John Adams"],
         correct: 2
     },
     {
-        question: "¿Qué significa CSS?",
-        options: ["Creative Style Sheets", "Cascading Style Sheets", "Computer Style Sheets", "Colorful Style Sheets"],
+        question: "¿Qué cultura construyó las pirámides de Giza?",
+        options: ["Maya", "Egipcia", "Azteca", "Griega"],
         correct: 1
     },
     {
-        question: "¿Cuál es la etiqueta HTML para insertar una imagen?",
-        options: ["<picture>", "<img>", "<image>", "<src>"],
+        question: "¿En qué país comenzó la Revolución Industrial?",
+        options: ["Francia", "Estados Unidos", "Alemania", "Inglaterra"],
+        correct: 3
+    },
+    {
+        question: "¿Quién era el líder de los mongoles que creó el imperio más grande de la historia?",
+        options: ["Atila el Huno", "Genghis Khan", "Alejandro Magno", "Julio César"],
         correct: 1
+    },
+    {
+        question: "¿Qué evento marcó el inicio de la Edad Moderna?",
+        options: ["Caída del Imperio Romano", "Revolución Francesa", "Caída de Constantinopla", "La invención de la imprenta"],
+        correct: 2
+    },
+    {
+        question: "¿Qué civilización antigua fundó la ciudad de Machu Picchu?",
+        options: ["Inca", "Olmeca", "Tolteca", "Moche"],
+        correct: 0
+    },
+    {
+        question: "¿Quién fue conocida como 'La Dama de Hierro'?",
+        options: ["Isabel II", "Angela Merkel", "Margaret Thatcher", "Indira Gandhi"],
+        correct: 2
+    },
+    {
+        question: "¿Cuál fue el nombre de la primera bomba atómica lanzada en Hiroshima?",
+        options: ["Fat Man", "Little Boy", "Tsar Bomba", "The Gadget"],
+        correct: 1
+    },
+    {
+        question: "¿En qué año cayó el Muro de Berlín?",
+        options: ["1985", "1991", "1989", "1990"],
+        correct: 2
     }
 ];
 
 let currentIndex = 0;
+let userAnswers = JSON.parse(localStorage.getItem('myQuizAnswers')) || {};
 
-// Referencias al DOM
 const questionText = document.getElementById('question-text');
 const optionsContainer = document.getElementById('options-container');
 const counterText = document.getElementById('question-counter');
 const btnPrev = document.getElementById('btn-prev');
 const btnNext = document.getElementById('btn-next');
+const quizContent = document.getElementById('quiz-content');
 
-// 7. Función para mostrar la pregunta actual
 function renderQuestion() {
-    const currentQuestion = questions[currentIndex];
-    
-    // Actualizar contador y texto de la pregunta
-    counterText.innerText = `${currentIndex + 1} de ${questions.length}`;
-    questionText.innerText = currentQuestion.question;
+    const current = quizData[currentIndex];
 
-    // Limpiar opciones anteriores
+    counterText.innerText = `Pregunta ${currentIndex + 1} de ${quizData.length}`;
+    questionText.innerText = current.question;
+
     optionsContainer.innerHTML = '';
-
-    // Generar radio buttons para las opciones
-    currentQuestion.options.forEach((option, index) => {
+    current.options.forEach((option, index) => {
+        const isChecked = userAnswers[currentIndex] == index ? 'checked' : '';
+        
         const optionHtml = `
             <label class="list-group-item d-flex align-items-center">
-                <input class="form-check-input me-2" type="radio" name="quiz-option" value="${index}">
+                <input class="form-check-input me-3" type="radio" name="answer" 
+                       value="${index}" ${isChecked} onchange="saveAnswer(${index})">
                 ${option}
             </label>
         `;
         optionsContainer.innerHTML += optionHtml;
     });
 
-    // Control de estado de botones
     btnPrev.disabled = currentIndex === 0;
-    btnNext.innerText = currentIndex === questions.length - 1 ? 'Finalizar' : 'Siguiente';
+    btnNext.innerText = currentIndex === quizData.length - 1 ? 'Finalizar' : 'Siguiente';
 }
 
-// 5. Funciones para los eventos Click
+window.saveAnswer = (index) => {
+    userAnswers[currentIndex] = index;
+    localStorage.setItem('myQuizAnswers', JSON.stringify(userAnswers));
+};
+
 btnNext.addEventListener('click', () => {
-    if (currentIndex < questions.length - 1) {
+    if (currentIndex < quizData.length - 1) {
         currentIndex++;
         renderQuestion();
     } else {
-        alert('¡Has terminado el cuestionario!');
+        showResults();
     }
 });
 
@@ -70,5 +106,40 @@ btnPrev.addEventListener('click', () => {
     }
 });
 
-// Inicializar la carga de la página
+function showResults() {
+    let score = 0;
+    let resultsHtml = `<h3 class="mb-4 text-center">Resultados Finales</h3><hr>`;
+
+    quizData.forEach((item, i) => {
+        const userSelection = userAnswers[i];
+        const isCorrect = userSelection == item.correct;
+        if (isCorrect) score++;
+
+        resultsHtml += `
+            <div class="mb-3 p-2 border-bottom border-secondary">
+                <p class="mb-1"><strong>${i + 1}. ${item.question}</strong></p>
+                <p class="small ${isCorrect ? 'text-info' : 'text-danger'}">
+                    Respuesta: ${userSelection !== undefined ? item.options[userSelection] : "No respondida"} 
+                    ${isCorrect ? 'Respuesta Correcta' : 'Respuesta Incorrecta'}
+                </p>
+            </div>
+        `;
+    });
+
+    resultsHtml += `
+        <div class="text-center mt-4">
+            <h4>Puntaje: ${score} / ${quizData.length}</h4>
+            <button class="btn btn-custom mt-3" onclick="restartQuiz()">Reiniciar</button>
+        </div>
+    `;
+
+    quizContent.innerHTML = resultsHtml;
+    document.getElementById('instructions-section').style.display = 'none';
+}
+
+function restartQuiz() {
+    localStorage.removeItem('myQuizAnswers');
+    location.reload();
+}
+
 document.addEventListener('DOMContentLoaded', renderQuestion);
