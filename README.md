@@ -2,4 +2,8 @@
 
 Prueba Técnica FrontEnd
 
-Favor de leer los pasos a seguir en el archivo Instrucciones.md
+- CH61
+-14/01/2026
+-13:26
+-Miriam Gómez Ramírez
+
